@@ -8,18 +8,51 @@
 
 #import "ViewController.h"
 
+#import <GPUImage/GPUImage.h>
+
 @interface ViewController ()
+
+@property (nonatomic, weak) IBOutlet GPUImageView *videoCameraView;
+
+@property (nonatomic, strong) GPUImageVideoCamera *videoCamera;
 
 @end
 
 @implementation ViewController
 
-- (void)viewDidLoad {
+#pragma mark - UIViewController
+#pragma mark Managing the View
+
+- (void)viewDidLoad
+{
     [super viewDidLoad];
-    // Do any additional setup after loading the view, typically from a nib.
+    
+    self.videoCamera = [[GPUImageVideoCamera alloc] initWithSessionPreset:AVCaptureSessionPreset640x480 cameraPosition:AVCaptureDevicePositionBack];
+    self.videoCamera.outputImageOrientation = self.interfaceOrientation;
+    
+    GPUImageHistogramFilter *histogramFilter = [[GPUImageHistogramFilter alloc] initWithHistogramType:kGPUImageHistogramRGB];
+    
+    GPUImageHistogramGenerator *histogramGraph = [[GPUImageHistogramGenerator alloc] init];
+    [histogramGraph forceProcessingAtSize:self.videoCameraView.frame.size];
+    
+    [self.videoCamera addTarget:histogramFilter];
+    [histogramFilter addTarget:histogramGraph];
+    [histogramGraph addTarget:self.videoCameraView];
 }
 
-- (void)didReceiveMemoryWarning {
+#pragma mark Responding to View Events
+
+- (void)viewDidAppear:(BOOL)animated
+{
+    [super viewDidAppear:animated];
+    
+    [self.videoCamera startCameraCapture];
+}
+
+#pragma mark Handling Memory Warnings
+
+- (void)didReceiveMemoryWarning
+{
     [super didReceiveMemoryWarning];
     // Dispose of any resources that can be recreated.
 }
